@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { db } from './db/pool.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
@@ -17,6 +18,16 @@ app.use(express.json());
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() });
+});
+
+// Test database connection
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await db.query('SELECT NOW()');
+    res.json({ time: result.rows[0].now });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Auth routes
@@ -43,7 +54,7 @@ app.get('/api/orders/:id', orderRoutes.getOrder);
 app.get('/api/services', serviceRoutes.listServices);
 app.get('/api/services/:id', serviceRoutes.getService);
 
-// Admin endpoints (with auth & RBAC to be added later)
+// Admin endpoints
 app.get('/api/admin/users', adminRoutes.getUsers);
 app.put('/api/admin/users/:id', adminRoutes.updateUser);
 app.post('/api/admin/users/:id/suspend', adminRoutes.suspendUser);
