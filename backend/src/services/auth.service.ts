@@ -33,7 +33,7 @@ export class AuthService {
       'INSERT INTO email_verifications (user_id, code, expires_at) VALUES ($1, $2, NOW() + INTERVAL \'15 minutes\')',
       [result.rows[0].id, code]
     );
-    // await this.sendVerificationEmail(email, code);
+    await this.sendVerificationEmail(email, code);
     return result.rows[0];
   }
 
@@ -108,7 +108,7 @@ export class AuthService {
       secure: false,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: "zdfkciaqtunvqmbg",
       },
     });
     await transporter.sendMail({
@@ -126,7 +126,7 @@ export class AuthService {
       secure: false,
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: "zdfkciaqtunvqmbg",
       },
     });
     await transporter.sendMail({
