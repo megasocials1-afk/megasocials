@@ -51,9 +51,6 @@ app.post('/api/auth/reset-password', authRoutes.resetPassword);
 app.post('/api/auth/verify-email', authRoutes.verifyEmail);
 
 // Auth routes (authenticated)
-app.get('/api/auth/me', authMiddleware, authRoutes.me);
-app.post('/api/auth/change-password', authMiddleware, authRoutes.changePassword);
-app.put('/api/auth/profile', authMiddleware, authRoutes.updateProfile);
 
 // User routes
 app.get('/api/profile', authMiddleware, userRoutes.getProfile);
