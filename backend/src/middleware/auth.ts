@@ -1,10 +1,9 @@
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 export const generateToken = (payload: any) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
 };
 
 export const verifyToken = (token: string) => {
@@ -14,25 +13,13 @@ export const verifyToken = (token: string) => {
 export const authMiddleware = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ error: 'Unauthorized - No token provided' });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
     next();
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      return res.status(401).json({ error: 'Unauthorized - Token expired' });
-    }
-    if (error instanceof jwt.JsonWebTokenError) {
-      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
-    }
-    return res.status(401).json({ error: 'Unauthorized - Token verification failed' });
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
   }
 };
-EOF && \
-
-# 2. Add missing imports to admin.routes.ts (using cat to overwrite the first lines)
-cat > backend/src/routes/admin.routes.ts.new <<'EOF'
-import { OrderService } from "../services/order.service.js";
-import { SettingsService } from "../services/settings.service.js";
