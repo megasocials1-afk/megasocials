@@ -30,3 +30,9 @@ export const authMiddleware = (req: any, res: any, next: any) => {
     return res.status(401).json({ error: 'Unauthorized - Token verification failed' });
   }
 };
+EOF && \
+
+# 2. Add missing imports to admin.routes.ts (using cat to overwrite the first lines)
+cat > backend/src/routes/admin.routes.ts.new <<'EOF'
+import { OrderService } from "../services/order.service.js";
+import { SettingsService } from "../services/settings.service.js";
