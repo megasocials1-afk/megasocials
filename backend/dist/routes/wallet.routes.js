@@ -1,24 +1,52 @@
 import { WalletService } from '../services/wallet.service.js';
-import { db } from '../db/pool.js';
+import { ActivityLogService } from '../services/activity-log.service.js';
 export default {
     getBalance: async (req, res) => {
         try {
-            const userId = req.user?.id || req.query.userId;
-            const balance = await WalletService.getBalance(userId);
+            const balance = await WalletService.getBalance(req.user.id);
             res.json({ balance });
         }
-        catch {
+        catch (err) {
             res.status(400).json({ error: 'Failed to get balance' });
         }
     },
     getTransactions: async (req, res) => {
         try {
-            const userId = req.user?.id || req.query.userId;
-            const result = await db.query('SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
-            res.json(result.rows);
+            const { limit = 50, offset = 0 } = req.query;
+            const transactions = await WalletService.getTransactions(req.user.id, parseInt(limit), parseInt(offset));
+            res.json(transactions);
         }
-        catch {
+        catch (err) {
             res.status(400).json({ error: 'Failed to get transactions' });
         }
-    }
+    },
+    credit: async (req, res) => {
+        try {
+            const { userId, amount, description } = req.body;
+            if (!userId || !amount) {
+                return res.status(400).json({ error: 'userId and amount are required' });
+            }
+            const newBalance = await WalletService.credit(userId, amount, 'manual', null, description || 'Admin credit');
+            await ActivityLogService.log(req.user.id, 'admin_credit', { userId, amount, description }, req.ip, req.headers['user-agent']);
+            res.json({ success: true, balance: newBalance });
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
+    debit: async (req, res) => {
+        try {
+            const { userId, amount, description } = req.body;
+            if (!userId || !amount) {
+                return res.status(400).json({ error: 'userId and amount are required' });
+            }
+            const newBalance = await WalletService.debit(userId, amount, 'manual', null, description || 'Admin debit');
+            await ActivityLogService.log(req.user.id, 'admin_debit', { userId, amount, description }, req.ip, req.headers['user-agent']);
+            res.json({ success: true, balance: newBalance });
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
 };
+//# sourceMappingURL=wallet.routes.js.map

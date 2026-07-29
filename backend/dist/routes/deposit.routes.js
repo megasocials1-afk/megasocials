@@ -1,27 +1,56 @@
-import { db } from '../db/pool.js';
+import { DepositService } from '../services/deposit.service.js';
 export default {
-    createDeposit: async (req, res) => {
+    create: async (req, res) => {
         try {
-            const userId = req.user?.id || req.body.userId;
-            const { amount } = req.body;
-            const result = await db.query(`INSERT INTO deposits (id, user_id, amount, method, status) VALUES (gen_random_uuid(), $1, $2, 'manual', 'pending') RETURNING *`, [userId, amount]);
-            res.json(result.rows[0]);
+            const userId = req.user.id;
+            const { amount, method } = req.body;
+            const deposit = await DepositService.createDeposit(userId, amount, method || 'manual');
+            res.json(deposit);
         }
         catch (err) {
             res.status(400).json({ error: err.message });
         }
     },
-    getDeposits: async (req, res) => {
+    list: async (req, res) => {
         try {
-            const userId = req.user?.id || req.query.userId;
-            const result = await db.query('SELECT * FROM deposits WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
-            res.json(result.rows);
+            const userId = req.user.id;
+            const deposits = await DepositService.getUserDeposits(userId);
+            res.json(deposits);
         }
-        catch {
+        catch (err) {
             res.status(400).json({ error: 'Failed to get deposits' });
         }
     },
-    webhook: async (req, res) => {
-        res.json({ success: true });
-    }
+    adminList: async (req, res) => {
+        try {
+            const deposits = await DepositService.getAllDeposits();
+            res.json(deposits);
+        }
+        catch (err) {
+            res.status(400).json({ error: 'Failed to get deposits' });
+        }
+    },
+    approve: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const adminId = req.user.id;
+            const deposit = await DepositService.approveDeposit(id, adminId);
+            res.json(deposit);
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
+    reject: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { reason } = req.body;
+            await DepositService.rejectDeposit(id, reason);
+            res.json({ success: true });
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
 };
+//# sourceMappingURL=deposit.routes.js.map

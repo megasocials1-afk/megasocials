@@ -1,24 +1,48 @@
-import { db } from '../db/pool.js';
+import { ServiceService } from '../services/service.service.js';
 export default {
     listServices: async (req, res) => {
         try {
-            const result = await db.query("SELECT * FROM services WHERE status = 'active'");
-            res.json(result.rows);
+            const services = await ServiceService.listServices();
+            res.json(services);
         }
-        catch {
+        catch (err) {
             res.status(400).json({ error: 'Failed to get services' });
         }
     },
     getService: async (req, res) => {
         try {
             const { id } = req.params;
-            const result = await db.query('SELECT * FROM services WHERE id = $1', [id]);
-            if (!result.rows.length)
+            const service = await ServiceService.getService(id);
+            if (!service)
                 return res.status(404).json({ error: 'Service not found' });
-            res.json(result.rows[0]);
+            res.json(service);
         }
-        catch {
+        catch (err) {
             res.status(400).json({ error: 'Failed to get service' });
         }
-    }
+    },
+    syncServices: async (req, res) => {
+        try {
+            const { providerId } = req.body;
+            if (!providerId)
+                return res.status(400).json({ error: 'providerId required' });
+            const result = await ServiceService.syncServices(providerId);
+            res.json(result);
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
+    updateMargin: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { margin_percent, margin_fixed } = req.body;
+            await ServiceService.updateMargin(id, margin_percent, margin_fixed);
+            res.json({ success: true });
+        }
+        catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    },
 };
+//# sourceMappingURL=service.routes.js.map

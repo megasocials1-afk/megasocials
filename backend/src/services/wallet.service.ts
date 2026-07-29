@@ -1,9 +1,18 @@
-import { db } from '../db/pool.js';
+import { db, query } from '../db/pool.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export class WalletService {
   static async getBalance(userId: string): Promise<number> {
-    const res = await db.query('SELECT balance FROM users WHERE id = $1', [userId]);
+    const res = await query('SELECT balance FROM users WHERE id = $1', [userId]);
     return parseFloat(res.rows[0]?.balance || '0');
+  }
+
+  static async getTransactions(userId: string, limit: number = 50, offset: number = 0) {
+    const res = await query(
+      'SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+      [userId, limit, offset]
+    );
+    return res.rows;
   }
 
   static async credit(userId: string, amount: number, type: string, referenceId: string | null, description: string) {
@@ -18,8 +27,8 @@ export class WalletService {
       const newBalance = parseFloat(update.rows[0].balance);
       await client.query(
         `INSERT INTO wallet_transactions (id, user_id, amount, type, reference_id, description, balance_after, status)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, 'completed')`,
-        [userId, amount, type, referenceId, description, newBalance]
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed')`,
+        [uuidv4(), userId, amount, type, referenceId, description, newBalance]
       );
       await client.query('COMMIT');
       return newBalance;
@@ -45,8 +54,8 @@ export class WalletService {
       const newBalance = parseFloat(update.rows[0].balance);
       await client.query(
         `INSERT INTO wallet_transactions (id, user_id, amount, type, reference_id, description, balance_after, status)
-         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, 'completed')`,
-        [userId, amount, type, referenceId, description, newBalance]
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'completed')`,
+        [uuidv4(), userId, amount, type, referenceId, description, newBalance]
       );
       await client.query('COMMIT');
       return newBalance;
@@ -56,5 +65,19 @@ export class WalletService {
     } finally {
       client.release();
     }
+  }
+
+  static async freeze(userId: string, amount: number, description: string = 'Freeze') {
+    // Placeholder for future implementation
+    return { success: true };
+  }
+
+  static async release(userId: string, amount: number, description: string = 'Release') {
+    // Placeholder for future implementation
+    return { success: true };
+  }
+
+  static async refund(userId: string, amount: number, orderId: string, description: string) {
+    return this.credit(userId, amount, 'refund', orderId, description);
   }
 }

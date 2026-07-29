@@ -5,9 +5,9 @@ export class ProviderFactory {
   static createAdapter(type: string, apiUrl: string, apiKey: string, config: any = {}): ProviderAdapter {
     switch (type.toLowerCase()) {
       case 'smmrug':
-        return new SMMRUGAdapter(apiUrl, apiKey);
+        return new SMMRUGAdapter(apiUrl, apiKey, config);
       default:
-        throw new Error('Unsupported provider type: ' + type);
+        throw new Error(`Unsupported provider type: ${type}`);
     }
   }
 }
