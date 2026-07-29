@@ -1,3 +1,6 @@
+import { OrderService } from "../services/order.service.js";
+import { SettingsService } from "../services/settings.service.js";
+
 import { AdminService } from '../services/admin.service.js';
 import { WalletService } from '../services/wallet.service.js';
 import { ServiceService } from '../services/service.service.js';
